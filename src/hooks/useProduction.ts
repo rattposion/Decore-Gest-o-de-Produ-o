@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
-interface Production {
+export interface Production {
   id: string;
   employeeId: string;
   employeeName: string;
@@ -20,7 +20,7 @@ export const useProduction = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProduction = async () => {
+  const fetchProductionData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -28,20 +28,19 @@ export const useProduction = () => {
       setProduction(response.data || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao carregar registros de produção');
-      setProduction([]); // Garante que production nunca será undefined
+      setProduction([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProduction();
   }, []);
 
-  const createProduction = async (data: Omit<Production, 'id' | 'employeeName' | 'equipmentModel' | 'createdAt' | 'updatedAt' | 'timestamp'> & { isReset?: boolean }) => {
+  useEffect(() => {
+    fetchProductionData();
+  }, [fetchProductionData]);
+
+  const createProduction = useCallback(async (data: Omit<Production, 'id' | 'employeeName' | 'equipmentModel' | 'createdAt' | 'updatedAt' | 'timestamp'> & { isReset?: boolean }) => {
     try {
       setError(null);
-      // Garante que o employeeId seja uma string válida
       const productionData = {
         ...data,
         employeeId: data.employeeId.toString(),
@@ -57,9 +56,9 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const updateProduction = async (id: string, data: Partial<Production>) => {
+  const updateProduction = useCallback(async (id: string, data: Partial<Production>) => {
     try {
       setError(null);
       const response = await api.put<Production>(`/production/${id}`, data);
@@ -72,9 +71,9 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const deleteProduction = async (id: string) => {
+  const deleteProduction = useCallback(async (id: string) => {
     try {
       setError(null);
       await api.delete(`/production/${id}`);
@@ -84,9 +83,9 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const getProductionByDateRange = async (startDate: string, endDate: string) => {
+  const getProductionByDateRange = useCallback(async (startDate: string, endDate: string) => {
     try {
       setError(null);
       console.log('Buscando produções com datas:', { startDate, endDate });
@@ -99,9 +98,9 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const getProductionByEmployee = async (employeeId: string) => {
+  const getProductionByEmployee = useCallback(async (employeeId: string) => {
     try {
       setError(null);
       const response = await api.get<Production[]>(`/production?employeeId=${employeeId}`);
@@ -111,9 +110,9 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const getProductionByEquipment = async (equipmentId: string) => {
+  const getProductionByEquipment = useCallback(async (equipmentId: string) => {
     try {
       setError(null);
       const response = await api.get<Production[]>(`/production?equipmentId=${equipmentId}`);
@@ -123,16 +122,16 @@ export const useProduction = () => {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const refresh = async () => {
+  const refreshFilteredProduction = useCallback(async (startDate: string, endDate: string) => {
     try {
-      const response = await api.get('/production');
-      setProduction(response.data || []);
+      const data = await getProductionByDateRange(startDate, endDate);
+      setProduction(data); // Atualiza o estado principal de production com os dados filtrados
     } catch (error) {
-      console.error('Erro ao carregar produções:', error);
+      console.error('Erro ao carregar produções filtradas para atualização:', error);
     }
-  };
+  }, [getProductionByDateRange]);
 
   return {
     production,
@@ -144,6 +143,7 @@ export const useProduction = () => {
     getProductionByDateRange,
     getProductionByEmployee,
     getProductionByEquipment,
-    refresh: fetchProduction,
+    refresh: fetchProductionData,
+    refreshFilteredProduction,
   };
 };
