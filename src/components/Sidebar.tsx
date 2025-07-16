@@ -9,7 +9,8 @@ import {
   MdAssessment,
   MdLogout,
   MdPerson,
-  MdConstruction
+  MdConstruction,
+  MdAssignment
 } from 'react-icons/md';
 
 const menuItems = [
@@ -18,6 +19,7 @@ const menuItems = [
   { path: '/equipment', icon: MdConstruction, label: 'Equipamentos', adminOnly: true },
   { path: '/inventory', icon: MdInventory, label: 'Estoque' },
   { path: '/production', icon: MdBuild, label: 'Produção' },
+  { path: '/separacao-macs', icon: MdAssignment, label: 'Separação MACs' },
   { path: '/reports', icon: MdAssessment, label: 'Relatórios' }
 ];
 

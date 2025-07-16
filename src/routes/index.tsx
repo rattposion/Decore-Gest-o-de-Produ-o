@@ -10,6 +10,7 @@ import Reports from '../pages/Reports';
 import Employees from '../pages/Employees';
 import Equipment from '../pages/Equipment';
 import Register from '../pages/Register';
+import SeparacaoMacs from '../pages/SeparacaoMacs';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -76,6 +77,7 @@ const AppRoutes: React.FC = () => {
         />
         <Route path="inventory" element={<Inventory />} />
         <Route path="production" element={<Production />} />
+        <Route path="separacao-macs" element={<SeparacaoMacs />} />
         <Route path="reports" element={<Reports />} />
       </Route>
 
