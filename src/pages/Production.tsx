@@ -60,10 +60,14 @@ export const Production: React.FC = () => {
     // Logs de depuração
     console.log('Equipamentos:', equipment);
     console.log('ID selecionado:', selectedEquipment);
+    console.log('Tipo do ID selecionado:', typeof selectedEquipment);
     console.log('ID do funcionário selecionado:', selectedEmployee);
 
     const selectedEquipmentItem = equipment.find(eq => eq.id === selectedEquipment);
+    console.log('Equipamento encontrado:', selectedEquipmentItem);
+    
     if (!selectedEquipmentItem) {
+      console.log('Todos os equipamentos disponíveis:', equipment.map(eq => ({ id: eq.id, modelName: eq.modelName })));
       toast({
         title: "Erro",
         description: `Equipamento não encontrado (id: ${selectedEquipment})`,
@@ -209,7 +213,8 @@ export const Production: React.FC = () => {
                           >
                             <option key="select-equipment" value="">Selecione um modelo</option>
                             {equipment.map((item, index) => {
-                              console.log('Option id:', item.id, typeof item.id);
+                              console.log('Option id:', item.id, typeof item.id, 'modelName:', item.modelName);
+                              console.log('Item completo:', item);
                               return (
                                 <option key={`equipment-${item.id || index}`} value={item.id}>
                                   {item.modelName}
