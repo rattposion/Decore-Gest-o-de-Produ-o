@@ -79,10 +79,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
   // Monitora mudanças nos resultados
   useEffect(() => {
     if (processedResults) {
-      console.log('=== MONITORANDO RESULTADOS ===');
-      console.log('processedResults atualizado:', processedResults);
-      console.log('macsNaoEncontrados:', processedResults.macsNaoEncontrados);
-      console.log('Quantidade de MACs não encontrados:', processedResults.macsNaoEncontrados.length);
+      
     }
   }, [processedResults]);
 
@@ -230,8 +227,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       .filter(mac => mac !== null) as string[];
 
     // Debug: Mostra os dados brutos
-    console.log('=== DADOS BRUTOS DOS EQUIPAMENTOS ===');
-    console.log(equipmentData);
+
     
     // Extrai dados dos equipamentos
     const equipamentos = equipmentData
@@ -239,8 +235,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       .map(block => block.trim())
       .filter(block => block.length > 0)
       .map(block => {
-        console.log('=== PROCESSANDO BLOCO ===');
-        console.log(block);
+        
         const lines = block.split('\n');
         
         // Procura por MAC em várias possíveis posições e formatos
@@ -337,20 +332,14 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
           .trim();
         
         // Debug: Mostra o que foi extraído
-        console.log('MAC encontrado:', mac);
-        console.log('MAC limpo:', cleanMac);
-        console.log('Modelo:', model);
-        console.log('Serial:', serial);
-        console.log('Local original:', local);
-        console.log('Local limpo:', cleanLocal);
-        console.log('Linha original do local:', localLine);
+        
         
         if (/^[A-F0-9]{12}$/.test(cleanMac)) {
-          console.log('✅ MAC válido encontrado:', cleanMac);
+          
           
           // Verifica se a localização não está vazia após a limpeza
           if (!cleanLocal) {
-            console.log('⚠️ Localização vazia após limpeza, usando "Sem Localização"');
+
             cleanLocal = 'Sem Localização';
           }
           
@@ -365,7 +354,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
             recondicionado: recondicionado
           };
         } else {
-          console.log('❌ MAC inválido ou não encontrado:', mac);
+
         }
         return null;
       });
@@ -381,18 +370,11 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       });
 
     // Debug: Mostra informações sobre o processamento
-    console.log('=== DEBUG PROCESSAMENTO ===');
-    console.log('MACs da lista (normalizados):', macsList);
-    console.log('Equipamentos encontrados (normalizados):', equipamentos.filter(e => e !== null).map(e => e?.mac));
-    console.log('Total de equipamentos válidos:', equipamentos.filter(e => e !== null).length);
-    console.log('Total de MACs na lista:', macsList.length);
+
     
     // Debug: Mostra exemplo de normalização
     if (macsList.length > 0 && equipamentos.filter(e => e !== null).length > 0) {
-      console.log('=== EXEMPLO DE NORMALIZAÇÃO ===');
-      console.log('MAC da lista (exemplo):', macsList[0]);
-      console.log('MAC do equipamento (exemplo):', equipamentos.filter(e => e !== null)[0]?.mac);
-      console.log('São iguais?', macsList[0] === equipamentos.filter(e => e !== null)[0]?.mac);
+      
     }
     
     // Mostra informações de debug para o usuário
@@ -418,9 +400,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
     const equipamentosEncontrados: EquipmentData[] = [];
     const macsNaoEncontrados: string[] = [];
 
-    console.log('=== PROCESSANDO COMPARAÇÃO ===');
-    console.log('MACs da lista para comparar:', macsList);
-    console.log('Equipamentos disponíveis:', Array.from(equipamentosMap.keys()));
+
 
     // Verifica cada MAC da lista
     macsList.forEach(mac => {
@@ -429,7 +409,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       
       // Procura o equipamento no mapa
       const temEquipamento = equipamentosMap.has(macNormalizado);
-      console.log(`MAC ${mac} (normalizado: ${macNormalizado}): ${temEquipamento ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}`);
+      
       
       if (temEquipamento) {
         // Tem equipamento
@@ -443,11 +423,7 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       }
     });
 
-    console.log('Equipamentos encontrados:', equipamentosEncontrados.length);
-    console.log('MACs não encontrados:', macsNaoEncontrados.length);
-    console.log('Lista de MACs não encontrados:', macsNaoEncontrados);
-    console.log('Tipo de macsNaoEncontrados:', typeof macsNaoEncontrados);
-    console.log('É array?', Array.isArray(macsNaoEncontrados));
+
 
     const resultados: ProcessedResults = {
       equipamentosComLocalizacao: equipamentosEncontrados.map(equip => ({
@@ -461,17 +437,12 @@ const MacOrganizerTab: React.FC<MacOrganizerTabProps> = ({
       macsNaoEncontrados
     };
 
-    console.log('=== RESULTADOS FINAIS ===');
-    console.log('Resultados criados:', resultados);
-    console.log('macsNaoEncontrados nos resultados:', resultados.macsNaoEncontrados);
-    console.log('Quantidade de MACs não encontrados:', resultados.macsNaoEncontrados.length);
+
 
     setProcessedResults(resultados);
     setShowResults(true);
     
-    console.log('=== ESTADO ATUALIZADO ===');
-    console.log('showResults definido como:', true);
-    console.log('processedResults será:', resultados);
+
 
     const total = macsList.length;
     const encontrados = equipamentosEncontrados.length;
@@ -712,9 +683,7 @@ OBSERVAÇÕES: N/A`);
             variant="outline" 
             colorScheme="orange"
             onClick={() => {
-              console.log('=== DEBUG COMPLETO ===');
-              console.log('Dados dos equipamentos:', equipmentData);
-              console.log('MACs para comparar:', macsParaComparar);
+              
               toast({
                 title: 'Debug Ativado',
                 description: 'Verifique o console do navegador para informações detalhadas',
@@ -762,11 +731,8 @@ OBSERVAÇÕES: N/A`);
               }, {} as Record<string, string[]>);
 
               // Debug: Mostra o agrupamento
-              console.log('=== AGRUPAMENTO POR LOCALIZAÇÃO ===');
-              console.log('Equipamentos por localização:', equipamentosPorLocalizacao);
-              Object.entries(equipamentosPorLocalizacao).forEach(([localizacao, macs]) => {
-                console.log(`${localizacao}: ${macs.length} MACs`);
-              });
+              
+              
 
               const resultados = [];
 
@@ -1019,10 +985,7 @@ OBSERVAÇÕES: N/A`);
                     colorScheme="orange" 
                     variant="outline"
                     onClick={() => {
-                      console.log('=== DEBUG RESULTADOS ===');
-                      console.log('Equipamentos encontrados:', processedResults.equipamentosComLocalizacao);
-                      console.log('MACs não encontrados:', processedResults.macsNaoEncontrados);
-                      console.log('Total de MACs não encontrados:', processedResults.macsNaoEncontrados.length);
+                      
                       toast({
                         title: 'Debug dos Resultados',
                         description: `Encontrados: ${processedResults.equipamentosComLocalizacao.length}, Não encontrados: ${processedResults.macsNaoEncontrados.length}`,

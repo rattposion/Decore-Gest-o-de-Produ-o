@@ -74,7 +74,7 @@ const Equipment: React.FC = () => {
       const dataToSend = {
         modelName: formData.modelName.trim()
       };
-      console.log('Tentando criar equipamento com dados:', dataToSend);
+  
 
       if (selectedEquipment) {
         await updateEquipment(selectedEquipment.id, dataToSend);

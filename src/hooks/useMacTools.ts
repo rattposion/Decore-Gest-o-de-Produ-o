@@ -92,7 +92,6 @@ export const useMacTools = () => {
       });
       
       if (erros.length > 0) {
-        console.log('Erros encontrados:', erros);
         toast({
           title: 'Detalhes dos Erros',
           description: `Encontrados ${erros.length} erro(s). Verifique o console para detalhes.`,
@@ -114,9 +113,7 @@ export const useMacTools = () => {
         isClosable: true,
       });
 
-      if (erros.length > 0) {
-        console.log('Erros encontrados:', erros);
-      }
+
     }
   };
 

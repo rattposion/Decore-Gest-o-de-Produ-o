@@ -46,11 +46,7 @@ export const useProduction = () => {
         employeeId: data.employeeId.toString(),
         date: data.date || new Date().toISOString().split('T')[0]
       };
-      console.log('=== DEBUG FRONTEND CREATE PRODUCTION ===');
-      console.log('Dados originais:', data);
-      console.log('Dados enviados para criação de produção:', productionData);
-      console.log('equipmentId sendo enviado:', productionData.equipmentId);
-      console.log('Tipo do equipmentId:', typeof productionData.equipmentId);
+      
       const response = await api.post<Production>('/production', productionData);
       setProduction(prev => [...(prev || []), response.data]);
       return response.data;
@@ -92,9 +88,7 @@ export const useProduction = () => {
   const getProductionByDateRange = useCallback(async (startDate: string, endDate: string) => {
     try {
       setError(null);
-      console.log('Buscando produções com datas:', { startDate, endDate });
       const response = await api.get<Production[]>(`/production?startDate=${startDate}&endDate=${endDate}`);
-      console.log('Resposta da API:', response.data);
       return response.data || [];
     } catch (err: any) {
       console.error('Erro ao buscar produções por data:', err);

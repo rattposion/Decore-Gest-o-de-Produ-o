@@ -34,7 +34,6 @@ export const useInventory = () => {
     try {
       setLoading(true);
       const response = await api.get<Equipment[]>('/equipment');
-      console.log('Equipamentos carregados do backend:', response.data);
       setEquipment(response.data);
       setError(null);
     } catch (err: any) {
@@ -140,8 +139,16 @@ export const useInventory = () => {
         date: new Date().toISOString().split('T')[0]
       });
 
-      // O backend atualiza automaticamente o estoque do equipamento
-      // Não precisamos fazer isso no frontend
+      // Atualizar o estado local do equipamento
+      setEquipment(prev => prev.map(eq => {
+        if (eq.id === equipmentId) {
+          const newStock = type === 'entrada' 
+            ? eq.currentStock + quantity 
+            : eq.currentStock - quantity;
+          return { ...eq, currentStock: newStock };
+        }
+        return eq;
+      }));
 
       return movement;
     } catch (err: any) {

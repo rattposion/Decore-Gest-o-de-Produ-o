@@ -21,10 +21,9 @@ export const Production: React.FC = () => {
   const [showResetForm, setShowResetForm] = useState(false);
 
   // Log de depuração para ver os equipamentos disponíveis
-  console.log('Equipamentos disponíveis:', equipment);
+  
   // Log de depuração para ver os funcionários disponíveis
-  console.log('Lista de funcionários:', employees);
-  console.log('Funcionários sem _id:', employees.filter(emp => !emp._id));
+  
 
   if (loadingProduction || loadingEmployees) {
     return (
@@ -58,16 +57,13 @@ export const Production: React.FC = () => {
     }
 
     // Logs de depuração
-    console.log('Equipamentos:', equipment);
-    console.log('ID selecionado:', selectedEquipment);
-    console.log('Tipo do ID selecionado:', typeof selectedEquipment);
-    console.log('ID do funcionário selecionado:', selectedEmployee);
+
 
     const selectedEquipmentItem = equipment.find(eq => eq.id === selectedEquipment);
-    console.log('Equipamento encontrado:', selectedEquipmentItem);
+
     
     if (!selectedEquipmentItem) {
-      console.log('Todos os equipamentos disponíveis:', equipment.map(eq => ({ id: eq.id, modelName: eq.modelName })));
+      
       toast({
         title: "Erro",
         description: `Equipamento não encontrado (id: ${selectedEquipment})`,
@@ -182,7 +178,7 @@ export const Production: React.FC = () => {
                           <select
                             value={selectedEmployee}
                             onChange={(e) => {
-                              console.log('Funcionário selecionado:', e.target.value);
+                          
                               setSelectedEmployee(e.target.value);
                             }}
                             className="input"
@@ -205,7 +201,7 @@ export const Production: React.FC = () => {
                           <select
                             value={selectedEquipment}
                             onChange={(e) => {
-                              console.log('Novo valor selecionado:', e.target.value);
+                          
                               setSelectedEquipment(e.target.value);
                             }}
                             className="input"
@@ -213,8 +209,7 @@ export const Production: React.FC = () => {
                           >
                             <option key="select-equipment" value="">Selecione um modelo</option>
                             {equipment.map((item, index) => {
-                              console.log('Option id:', item.id, typeof item.id, 'modelName:', item.modelName);
-                              console.log('Item completo:', item);
+                              
                               return (
                                 <option key={`equipment-${item.id || index}`} value={item.id}>
                                   {item.modelName}

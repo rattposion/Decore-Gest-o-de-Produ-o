@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
       try {
         const response = await api.get('/employees');
         setEmployees(response.data || []);
-        console.log('Funcionários carregados:', response.data);
+  
       } catch (error) {
         console.error('Erro ao carregar funcionários:', error);
         setEmployees([]);
@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
     const fetchFilteredProduction = async () => {
       try {
         const data = await getProductionByDateRange(startDate, endDate);
-        console.log('Produções filtradas recebidas:', data);
+  
         // Deduplicate the data
         const uniqueProductions = Array.from(new Map(data.map(item => [item._id || item.id, item])).values());
         setFilteredProductions(uniqueProductions);
@@ -89,10 +89,7 @@ const Dashboard: React.FC = () => {
   const nomesEquipamentosResetados = equipamentosResetados.map(eq => eq.modelName).join(', ') || 'Nenhum';
   
   // Logs de depuração
-  console.log('Productions:', production);
-  console.log('Employees:', employees);
-  console.log('Equipment:', equipment);
-  console.log('Filtered Productions:', filteredProductions);
+  
   
   // Produção por colaborador no período
   const productionByEmployee = activeEmployees.map(employee => {
@@ -110,7 +107,7 @@ const Dashboard: React.FC = () => {
     };
   });
 
-  console.log('Production by Employee:', productionByEmployee);
+  
 
   // Calcular total de resets realizados (soma de totalResets de todos os equipamentos)
   const totalResets = equipment.reduce((sum, eq) => sum + (eq.totalResets || 0), 0);
