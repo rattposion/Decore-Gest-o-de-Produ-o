@@ -21,20 +21,39 @@ export interface ProductionRecord {
   employeeName: string;
   equipmentId: string;
   equipmentModel: string;
-  quantity: number;
+  boxId: string;
+  macs: string[];
+  quantity: number; // Calculado automaticamente baseado no número de MACs
   date: string;
   timestamp: string;
+  isReset?: boolean;
 }
 
 export interface StockMovement {
   id: string;
   equipmentId: string;
   equipmentName: string;
-  type: 'entrada' | 'saida';
-  quantity: number;
+  type: 'entrada_caixa' | 'saida_caixa';
+  boxId?: string;
+  macs?: string[];
+  quantity: number; // Calculado automaticamente baseado no número de MACs
   date: string;
   timestamp: string;
   description: string;
+}
+
+export interface Box {
+  id: string;
+  boxId: string;
+  equipmentId: string;
+  equipmentModel: string;
+  macs: string[];
+  employeeId: string;
+  employeeName: string;
+  date: string;
+  timestamp: string;
+  status: 'ativa' | 'enviada' | 'cancelada';
+  isReset?: boolean;
 }
 
 export interface DailyReport {

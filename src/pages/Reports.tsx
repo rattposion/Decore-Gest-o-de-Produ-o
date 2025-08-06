@@ -52,21 +52,24 @@ const Reports: React.FC = () => {
   const filteredMovements = movements.filter(movement => 
     movement.date >= startDate && 
     movement.date <= endDate && 
-    movement.type === 'saida'
+    (movement.type === 'saida' || movement.type === 'saida_caixa')
   );
 
   // Cálculos de totais
   const totalProduction = filteredProductions.reduce((sum, p) => sum + p.quantity, 0);
   const totalOutputs = filteredMovements.reduce((sum, m) => sum + m.quantity, 0);
   const uniqueEmployees = new Set(filteredProductions.map(p => p.employeeId)).size;
+  const totalBoxes = filteredProductions.length;
   
   // Produção por colaborador
   const productionByEmployee = employees.map(employee => {
     const employeeProductions = filteredProductions.filter(p => p.employeeId === employee.id);
     const total = employeeProductions.reduce((sum, p) => sum + p.quantity, 0);
+    const boxes = employeeProductions.length;
     return {
       ...employee,
       totalProduction: total,
+      totalBoxes: boxes,
       productions: employeeProductions
     };
   }).filter(emp => emp.totalProduction > 0);
@@ -98,12 +101,13 @@ const Reports: React.FC = () => {
     const csvContent = [
       ['Período:', `${startDate} até ${endDate}`],
       [''],
-      ['PRODUÇÃO POR COLABORADOR'],
-      ['Colaborador', 'Departamento', 'Total Produzido'],
+      ['CAIXAS POR COLABORADOR'],
+      ['Colaborador', 'Departamento', 'Total Equipamentos', 'Total Caixas'],
       ...productionByEmployee.map(emp => [
         emp.name,
         emp.department,
-        emp.totalProduction.toString()
+        emp.totalProduction.toString(),
+        emp.totalBoxes.toString()
       ]),
       [''],
       ['PRODUÇÃO POR MODELO'],
@@ -116,29 +120,33 @@ const Reports: React.FC = () => {
       ]),
       [''],
       ['REGISTROS DETALHADOS'],
-      ['Data', 'Hora', 'Colaborador', 'Modelo', 'Quantidade', 'Tipo'],
+      ['Data', 'Hora', 'Colaborador', 'Modelo', 'Caixa', 'Quantidade', 'Tipo', 'MACs'],
       ...filteredProductions.map(p => [
         p.date,
         new Date(p.timestamp).toLocaleTimeString('pt-BR'),
         p.employeeName,
         p.equipmentModel,
+        p.boxId || 'N/A',
         p.quantity.toString(),
-        p.isReset ? 'RESET' : 'PRONTO'
+        p.isReset ? 'RESET' : 'PRONTO',
+        p.macs ? p.macs.join(';') : 'N/A'
       ]),
       ...filteredMovements.map(m => [
         m.date,
         new Date(m.timestamp).toLocaleTimeString('pt-BR'),
         '-',
         m.equipmentName,
+        m.boxId || 'N/A',
         m.quantity.toString(),
-        'Saída'
+        'Saída',
+        m.macs ? m.macs.join(';') : 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `relatorio_producao_${startDate}_${endDate}.csv`;
+    link.download = `relatorio_caixas_${startDate}_${endDate}.csv`;
     link.click();
   };
 
@@ -148,8 +156,8 @@ const Reports: React.FC = () => {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Relatórios de Produção</h1>
-            <p className="text-gray-600 mt-1">Análise detalhada da produção e saídas</p>
+            <h1 className="text-3xl font-bold text-gray-900">Relatórios de Caixas</h1>
+            <p className="text-gray-600 mt-1">Análise detalhada das caixas registradas e saídas</p>
           </div>
           <button
             onClick={handleExport}
@@ -227,7 +235,7 @@ const Reports: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Produção Total</p>
+                <p className="text-sm font-medium text-gray-600">Equipamentos Total</p>
                 <p className="text-3xl font-bold text-blue-600 mt-2">{totalProduction}</p>
               </div>
               <ArrowTrendingUpIcon className="h-8 w-8 text-blue-600" />
@@ -259,8 +267,8 @@ const Reports: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Colaboradores Ativos</p>
-                <p className="text-3xl font-bold text-purple-600 mt-2">{uniqueEmployees}</p>
+                <p className="text-sm font-medium text-gray-600">Total de Caixas</p>
+                <p className="text-3xl font-bold text-purple-600 mt-2">{totalBoxes}</p>
               </div>
               <CalendarIcon className="h-8 w-8 text-purple-600" />
             </div>
@@ -268,10 +276,10 @@ const Reports: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Produção por Colaborador */}
+          {/* Caixas por Colaborador */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">Produção por Colaborador</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Caixas por Colaborador</h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
@@ -280,26 +288,27 @@ const Reports: React.FC = () => {
                     <div>
                       <p className="font-medium text-gray-900">{employee.name}</p>
                       <p className="text-sm text-gray-600">{employee.department}</p>
+                      <p className="text-xs text-gray-500">{employee.totalBoxes} caixa(s)</p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-blue-600">{employee.totalProduction}</p>
-                      <p className="text-xs text-gray-500">unidades</p>
+                      <p className="text-xs text-gray-500">equipamentos</p>
                     </div>
                   </div>
                 ))}
                 {productionByEmployee.length === 0 && (
                   <p className="text-gray-500 text-center py-4">
-                    Nenhuma produção encontrada para os filtros selecionados
+                    Nenhuma caixa encontrada para os filtros selecionados
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Produção e Saídas por Modelo */}
+          {/* Equipamentos e Saídas por Modelo */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">Produção e Saídas por Modelo</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Equipamentos e Saídas por Modelo</h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
@@ -310,7 +319,7 @@ const Reports: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600">Produção</p>
+                        <p className="text-gray-600">Equipamentos</p>
                         <p className="font-semibold text-blue-600">{productionByModel[model]}</p>
                       </div>
                       <div>
@@ -328,7 +337,7 @@ const Reports: React.FC = () => {
                 ))}
                 {Object.keys(productionByModel).length === 0 && (
                   <p className="text-gray-500 text-center py-4">
-                    Nenhuma produção encontrada para os filtros selecionados
+                    Nenhuma caixa encontrada para os filtros selecionados
                   </p>
                 )}
               </div>
@@ -358,7 +367,13 @@ const Reports: React.FC = () => {
                     Modelo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Caixa
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantidade
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    MACs
                   </th>
                 </tr>
               </thead>
@@ -371,7 +386,9 @@ const Reports: React.FC = () => {
                     type: p.isReset ? 'RESET' : 'PRONTO',
                     name: p.employeeName,
                     model: p.equipmentModel,
+                    boxId: p.boxId || 'N/A',
                     quantity: p.quantity
+                    macs: p.macs || []
                   })),
                   ...filteredMovements.map(m => ({
                     id: m.id,
@@ -380,7 +397,9 @@ const Reports: React.FC = () => {
                     type: 'Saída',
                     name: m.description,
                     model: m.equipmentName,
+                    boxId: m.boxId || 'N/A',
                     quantity: m.quantity
+                    macs: m.macs || []
                   }))
                 ]
                   .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -406,10 +425,22 @@ const Reports: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {record.model}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {record.boxId}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <span className={record.type === 'Saída' ? 'text-red-600' : 'text-blue-600'}>
-                          {record.quantity} unidades
+                          {record.quantity} equipamentos
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                        <div className="truncate" title={record.macs.join(', ')}>
+                          {record.macs.length > 0 ? (
+                            record.macs.length > 3 
+                              ? `${record.macs.slice(0, 3).join(', ')}... (+${record.macs.length - 3})`
+                              : record.macs.join(', ')
+                          ) : 'N/A'}
+                        </div>
                       </td>
                     </tr>
                   ))}

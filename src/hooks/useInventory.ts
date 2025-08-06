@@ -16,7 +16,9 @@ interface Movement {
   equipmentId: string;
   equipmentName: string;
   quantity: number;
-  type: 'entrada' | 'saida';
+  type: 'entrada_caixa' | 'saida_caixa';
+  boxId?: string;
+  macs?: string[];
   description: string;
   date: string;
   timestamp: Date;
@@ -87,9 +89,13 @@ export const useInventory = () => {
     }
   };
 
-  const createMovement = async (data: Omit<Movement, 'id' | 'equipmentName' | 'createdAt' | 'updatedAt' | 'timestamp'>) => {
+  const createMovement = async (data: Omit<Movement, 'id' | 'equipmentName' | 'createdAt' | 'updatedAt' | 'timestamp' | 'quantity'> & { macs?: string[] }) => {
     try {
-      const response = await api.post<Movement>('/movements', data);
+      const movementData = {
+        ...data,
+        quantity: data.macs ? data.macs.length : 1 // Calcula baseado no número de MACs
+      };
+      const response = await api.post<Movement>('/movements', movementData);
       setMovements(prev => [...prev, response.data]);
       return response.data;
     } catch (err: any) {
@@ -118,10 +124,11 @@ export const useInventory = () => {
     }
   };
 
-  const addStockMovement = async (
+  const addBoxMovement = async (
     equipmentId: string,
-    type: 'entrada' | 'saida',
-    quantity: number,
+    type: 'entrada_caixa' | 'saida_caixa',
+    boxId: string,
+    macs: string[],
     description: string,
     equipmentName?: string
   ) => {
@@ -133,16 +140,18 @@ export const useInventory = () => {
 
       const movement = await createMovement({
         equipmentId,
-        quantity,
+        boxId,
+        macs,
         type,
         description,
         date: new Date().toISOString().split('T')[0]
       });
 
       // Atualizar o estado local do equipamento
+      const quantity = macs.length;
       setEquipment(prev => prev.map(eq => {
         if (eq.id === equipmentId) {
-          const newStock = type === 'entrada' 
+          const newStock = type === 'entrada_caixa' 
             ? eq.currentStock + quantity 
             : eq.currentStock - quantity;
           return { ...eq, currentStock: newStock };
@@ -156,6 +165,22 @@ export const useInventory = () => {
     }
   };
 
+  // Mantém compatibilidade com o método antigo
+  const addStockMovement = async (
+    equipmentId: string,
+    type: 'entrada' | 'saida',
+    quantity: number,
+    description: string,
+    equipmentName?: string
+  ) => {
+    // Converte para o novo sistema de caixas
+    const newType = type === 'entrada' ? 'entrada_caixa' : 'saida_caixa';
+    const fakeMacs = Array.from({ length: quantity }, (_, i) => `LEGACY_${Date.now()}_${i}`);
+    const boxId = `LEGACY_BOX_${Date.now()}`;
+    
+    return addBoxMovement(equipmentId, newType, boxId, fakeMacs, description, equipmentName);
+  };
+
   return {
     equipment,
     movements,
@@ -167,6 +192,7 @@ export const useInventory = () => {
     updateMovement,
     deleteMovement,
     addStockMovement,
+    addBoxMovement,
     refresh: () => Promise.all([fetchEquipment(), fetchMovements()]),
   };
 };

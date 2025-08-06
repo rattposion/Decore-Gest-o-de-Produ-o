@@ -7,11 +7,20 @@ export interface Production {
   employeeName: string;
   equipmentId: string;
   equipmentModel: string;
-  quantity: number;
+  boxId: string;
+  macs: string[];
+  quantity: number; // Calculado automaticamente
   date: string;
   timestamp: Date;
   createdAt: Date;
   updatedAt: Date;
+  isReset?: boolean;
+}
+
+export interface BoxData {
+  boxId: string;
+  equipmentId: string;
+  macs: string[];
   isReset?: boolean;
 }
 
@@ -38,13 +47,14 @@ export const useProduction = () => {
     fetchProductionData();
   }, [fetchProductionData]);
 
-  const createProduction = useCallback(async (data: Omit<Production, 'id' | 'employeeName' | 'equipmentModel' | 'createdAt' | 'updatedAt' | 'timestamp'> & { isReset?: boolean }) => {
+  const createProduction = useCallback(async (data: Omit<Production, 'id' | 'employeeName' | 'equipmentModel' | 'createdAt' | 'updatedAt' | 'timestamp' | 'quantity'> & { isReset?: boolean }) => {
     try {
       setError(null);
       const productionData = {
         ...data,
         employeeId: data.employeeId.toString(),
-        date: data.date || new Date().toISOString().split('T')[0]
+        date: data.date || new Date().toISOString().split('T')[0],
+        quantity: data.macs.length // Calcula automaticamente baseado no número de MACs
       };
       
       const response = await api.post<Production>('/production', productionData);
@@ -53,6 +63,30 @@ export const useProduction = () => {
     } catch (err: any) {
       console.error('Erro detalhado ao criar produção:', err.response?.data);
       const errorMessage = err.response?.data?.message || 'Erro ao criar registro de produção';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  const createBox = useCallback(async (employeeId: string, boxData: BoxData) => {
+    try {
+      setError(null);
+      const productionData = {
+        employeeId: employeeId.toString(),
+        equipmentId: boxData.equipmentId,
+        boxId: boxData.boxId,
+        macs: boxData.macs,
+        quantity: boxData.macs.length,
+        date: new Date().toISOString().split('T')[0],
+        isReset: boxData.isReset || false
+      };
+      
+      const response = await api.post<Production>('/production', productionData);
+      setProduction(prev => [...(prev || []), response.data]);
+      return response.data;
+    } catch (err: any) {
+      console.error('Erro detalhado ao criar caixa:', err.response?.data);
+      const errorMessage = err.response?.data?.message || 'Erro ao criar caixa';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -136,6 +170,7 @@ export const useProduction = () => {
     loading,
     error,
     createProduction,
+    createBox,
     updateProduction,
     deleteProduction,
     getProductionByDateRange,

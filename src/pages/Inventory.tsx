@@ -8,9 +8,10 @@ import { useInventory } from '../hooks/useInventory';
 import { Box, Heading } from '@chakra-ui/react';
 
 export const Inventory: React.FC = () => {
-  const { equipment, addStockMovement } = useInventory();
+  const { equipment, addBoxMovement } = useInventory();
   const [selectedEquipment, setSelectedEquipment] = useState<string>('');
-  const [quantity, setQuantity] = useState<string>('');
+  const [boxId, setBoxId] = useState<string>('');
+  const [macs, setMacs] = useState<string>('');
   const [description, setDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -19,15 +20,34 @@ export const Inventory: React.FC = () => {
     item.modelName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Valida e processa lista de MACs
+  const processarMacs = (macsText: string): string[] => {
+    return macsText
+      .split('\n')
+      .map(mac => mac.trim().replace(/:/g, '').toUpperCase())
+      .filter(mac => mac.length > 0 && /^[A-F0-9]{12}$/.test(mac));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const item = equipment.find(eq => eq.id === selectedEquipment);
     if (!item) return;
 
-    const quantityNum = parseInt(quantity);
-    if (quantityNum <= 0 || quantityNum > item.currentStock) {
-      alert('Quantidade inválida ou maior que o estoque disponível!');
+    if (!boxId.trim()) {
+      alert('Por favor, informe o ID da caixa.');
+      return;
+    }
+
+    // Processa e valida MACs
+    const macsList = processarMacs(macs);
+    if (macsList.length === 0) {
+      alert('Nenhum MAC válido encontrado. MACs devem ter 12 caracteres hexadecimais.');
+      return;
+    }
+
+    if (macsList.length > item.currentStock) {
+      alert(`Quantidade de MACs (${macsList.length}) é maior que o estoque disponível (${item.currentStock})!`);
       return;
     }
 
@@ -36,11 +56,12 @@ export const Inventory: React.FC = () => {
       return;
     }
 
-    await addStockMovement(
+    await addBoxMovement(
       selectedEquipment,
-      'saida',
-      quantityNum,
-      description
+      'saida_caixa',
+      boxId.trim(),
+      macsList,
+      `${description} - Caixa: ${boxId.trim()}`
     );
 
     // Atualiza o inventário em tempo real
@@ -49,9 +70,10 @@ export const Inventory: React.FC = () => {
     }
 
     setSelectedEquipment('');
-    setQuantity('');
+    setBoxId('');
+    setMacs('');
     setDescription('');
-    alert('Saída registrada com sucesso!');
+    alert(`Saída da caixa ${boxId.trim()} registrada com sucesso! ${macsList.length} equipamentos retirados.`);
   };
 
   return (
@@ -59,19 +81,19 @@ export const Inventory: React.FC = () => {
       <Heading mb={6}>Inventário</Heading>
       <div className="p-6 space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Estoque</h1>
-          <p className="text-gray-600 mt-1">Controle as saídas e monitore o estoque</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Estoque por Caixa</h1>
+          <p className="text-gray-600 mt-1">Controle as saídas de caixas com MACs e monitore o estoque</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Formulário de Saída */}
+          {/* Formulário de Saída de Caixa */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center space-x-2 mb-6">
                 <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <ArrowTrendingDownIcon className="w-5 h-5 text-red-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Registrar Saída</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Registrar Saída de Caixa</h2>
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,17 +118,36 @@ export const Inventory: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantidade
+                    ID da Caixa
                   </label>
                   <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
+                    type="text"
+                    value={boxId}
+                    onChange={(e) => setBoxId(e.target.value)}
                     className="input"
                     required
-                    min="1"
-                    placeholder="Quantidade para saída..."
+                    placeholder="Ex: SAIDA001, OUT-BOX-001..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lista de MACs para Saída
+                  </label>
+                  <textarea
+                    value={macs}
+                    onChange={(e) => setMacs(e.target.value)}
+                    className="input min-h-[100px]"
+                    required
+                    placeholder="Cole aqui os MACs dos equipamentos (um por linha):
+001122334455
+AABBCCDDEEFF
+123456789ABC
+..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {processarMacs(macs).length} MAC(s) válido(s) detectado(s)
+                  </p>
                 </div>
 
                 <div>
@@ -124,7 +165,7 @@ export const Inventory: React.FC = () => {
 
                 <button type="submit" className="btn-primary w-full">
                   <ArrowTrendingDownIcon className="w-5 h-5 mr-2" />
-                  Registrar Saída
+                  Registrar Saída de Caixa ({processarMacs(macs).length} itens)
                 </button>
               </form>
             </div>
@@ -162,6 +203,7 @@ export const Inventory: React.FC = () => {
                     >
                       <div>
                         <h3 className="font-medium text-gray-900">{item.modelName}</h3>
+                        <p className="text-xs text-gray-500">Gerenciado por caixas com MACs</p>
                       </div>
                       <div className="text-right">
                         <p className={`text-lg font-semibold ${

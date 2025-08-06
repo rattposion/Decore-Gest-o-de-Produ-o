@@ -95,9 +95,11 @@ const Dashboard: React.FC = () => {
   const productionByEmployee = activeEmployees.map(employee => {
     const employeeProductions = filteredProductions.filter(p => p.employeeId === employee._id || p.employeeId === employee.id);
     const totalProduced = employeeProductions.reduce((sum, p) => sum + p.quantity, 0);
+    const totalBoxes = employeeProductions.length;
     return {
       ...employee,
       totalProduced,
+      totalBoxes,
       lastProduction: employeeProductions.length > 0 
         ? new Date(Math.max(...employeeProductions.map(p => new Date(p.timestamp).getTime()))).toLocaleTimeString('pt-BR', {
                                 hour: '2-digit',
@@ -118,10 +120,10 @@ const Dashboard: React.FC = () => {
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={6}>
         <StatCard
           key="stat-average-per-employee"
-          title="Média por Colaborador"
+          title="Equipamentos por Colaborador"
           value={activeEmployees.length > 0 ? Math.round(totalProducedToday / activeEmployees.length).toString() : "0"}
           icon={ChartBarIcon}
-          description="Média de produção"
+          description="Média de equipamentos"
           color="blue"
         />
         <StatCard
@@ -193,7 +195,7 @@ const Dashboard: React.FC = () => {
             <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <ArchiveBoxIcon className="w-5 h-5 text-orange-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Produção por Colaborador</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Caixas por Colaborador</h2>
           </div>
           <Box mt={4} mb={2} display="flex" gap={4} alignItems="center">
             <label>
@@ -221,14 +223,21 @@ const Dashboard: React.FC = () => {
                       <ArchiveBoxIcon className="h-5 w-5 text-green-600" />
                       <div>
                         <p className="font-medium text-gray-900">{prod.employeeName || employee?.name || 'Funcionário não encontrado'}</p>
-                        <p className="text-sm text-gray-600">{equipmentItem?.modelName || 'Modelo não encontrado'}</p>
+                        <p className="text-sm text-gray-600">
+                          {equipmentItem?.modelName || 'Modelo não encontrado'} - Caixa: {prod.boxId || 'N/A'}
+                        </p>
                         <span className={`inline-block text-xs font-semibold rounded px-2 py-1 mt-1 ${prod.isReset ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
                           {prod.isReset ? 'RESET' : 'PRONTO'}
                         </span>
+                        {prod.macs && prod.macs.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {prod.macs.length} MAC(s): {prod.macs.slice(0, 3).join(', ')}{prod.macs.length > 3 ? '...' : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-600">{prod.quantity} unidades</p>
+                      <p className="font-semibold text-green-600">{prod.quantity} equipamentos</p>
                       <p className="text-xs text-gray-500">
                         {new Date(prod.timestamp).toLocaleTimeString('pt-BR', {
                           hour: '2-digit',
@@ -244,7 +253,7 @@ const Dashboard: React.FC = () => {
             <div className="text-center py-8">
               <ArchiveBoxIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">
-                Nenhuma produção registrada no período selecionado.
+                Nenhuma caixa registrada no período selecionado.
               </p>
             </div>
           )}
